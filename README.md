@@ -1,5 +1,8 @@
 # xTableBox
 
+## DEMO
+https://exsitec.wistia.com/medias/3zw9eusas3
+
 ## Features
 
 xTableBox is the equivalent of a Table Box in QlikView. During development it is very common to want to display all columns and rows from a specific table in your data model.
@@ -8,12 +11,9 @@ With this extension you get to simply select which table from your data model yo
 
 This is much faster than adding a regula table to your sheet and then add all columns manually. 
 
-Demo: https://exsitec.wistia.com/medias/3zw9eusas3
-
 ## Usage
 
 1. Simply drag and drop the xTableBox extension onto a sheet and select a table.
-
 
 ## Installation
 ### Server
