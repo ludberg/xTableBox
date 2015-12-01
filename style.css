@@ -1,0 +1,21 @@
+.qv-object-xTableBox div.qv-object-content-container {
+	overflow: auto;
+}
+.qv-object-xTableBox td,
+.qv-object-xTableBox th {
+	border-top: 0px solid #fff;
+	border-bottom: 1px solid #ddd;
+	border-right: 1px solid #ddd;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	vertical-align: middle;
+	cursor: default;
+	font-size: 12px;
+}
+.qv-object-xTableBox td.numeric {
+	text-align: right;
+}
+.qv-object-xTableBox button {
+	width: 100%;
+}
