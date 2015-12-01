@@ -115,7 +115,7 @@ define( ["qlik", "jquery", "text!./style.css","core.models/engine", "util"], fun
 			canTakeSnapshot: true
 		},
 		paint: function ( $element ) {
-		  	var html = "Choose table: <select id='tableSelector'><option value='-'>-</option></select><br><table><thead><tr>", 
+		  	var html = "Select table: <select id='tableSelector'><option value='-'>-</option></select><br><table><thead><tr>", 
 				self = this, 
 				lastrow = 0, 
 				morebutton = false, 
@@ -150,6 +150,13 @@ define( ["qlik", "jquery", "text!./style.css","core.models/engine", "util"], fun
 					}
 					//html += '<td';
 				  	html += "<td class='";
+				  
+				  	if(index == dimcount-1) {
+						html += "lastcol ";
+				  	}
+				  
+				 
+				  
 					if ( !isNaN( cell.qNum ) ) {
 						//html += " class='numeric'";
 					  	html += "numeric ";

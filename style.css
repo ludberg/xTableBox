@@ -1,7 +1,24 @@
 .qv-object-xTableBox div.qv-object-content-container {
 	overflow: auto;
 }
-.qv-object-xTableBox td,
+.qv-object-xTableBox td {
+  	border-top: 0px solid #fff;
+	border-bottom: 1px solid #f2f2f2;
+	border-right: 1px solid #f2f2f2;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	vertical-align: middle;
+	cursor: auto;
+	font-size: 12px;
+  	padding-top: 0.3em;
+  	padding-bottom: 0.3em;
+}
+
+.qv-object-xTableBox td.lastcol { 
+ 	border-right: 1px solid #fff !important; 
+}
+
 .qv-object-xTableBox th {
 	border-top: 0px solid #fff;
 	border-bottom: 1px solid #ddd;
@@ -10,7 +27,7 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 	vertical-align: middle;
-	cursor: default;
+	cursor: auto;
 	font-size: 12px;
 }
 .qv-object-xTableBox td.numeric {
