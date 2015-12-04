@@ -1,6 +1,11 @@
 .qv-object-xTableBox div.qv-object-content-container {
 	overflow: auto;
 }
+
+.qv-object-xTableBox .icon-large {
+  font-size: 2em;
+}
+
 .qv-object-xTableBox td {
   	border-top: 0px solid #fff;
 	border-bottom: 1px solid #f2f2f2;
@@ -28,7 +33,7 @@
 	text-overflow: ellipsis;
 	vertical-align: middle;
 	cursor: auto;
-	font-size: 12px;
+	font-size: 1em;
 }
 .qv-object-xTableBox td.numeric {
 	text-align: right;

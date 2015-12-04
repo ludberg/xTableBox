@@ -33,6 +33,7 @@ define( ["qlik", "jquery", "text!./style.css","core.models/engine", "util"], fun
 	}
   
   	function reverseOrder ( self, col ) {
+	  	console.log('reverseOrder');
 		var hypercube = self.backendApi.model.layout.qHyperCube;
 		var dimcnt = hypercube.qDimensionInfo.length;
 		var reversesort = col < dimcnt ? hypercube.qDimensionInfo[col].qReverseSort :
@@ -47,11 +48,12 @@ define( ["qlik", "jquery", "text!./style.css","core.models/engine", "util"], fun
 	}
 
 	function formatHeader ( col, value, sortorder ) {
+	  	console.log('formatHeader');
 		var html =
 			'<th data-col="' + col + '">' + value.qFallbackTitle ;
 		//sort Ascending or Descending ?? add arrow
 		if(value.qSortIndicator === 'A' || value.qSortIndicator === 'D') {
-			html += (value.qSortIndicator === 'A' ? "<i class='icon-triangle-top" : "<i class='icon-triangle-bottom");
+			html += (value.qSortIndicator === 'A' ? "<i class='icon-triangle-top icon-large" : "<i class='icon-triangle-bottom icon-large");
 			if ( sortorder && sortorder[0] !== col ) {
 				html += " secondary";
 			}
@@ -83,16 +85,6 @@ define( ["qlik", "jquery", "text!./style.css","core.models/engine", "util"], fun
 					uses: "dimensions",
 					min: 0
 				},
-			  	/*
-				measures: {
-					uses: "measures",
-					min: 0
-				},
-				
-				sorting: {
-					uses: "sorting"
-				},
-				*/
 				settings: {
 					uses: "settings"
 				},
@@ -115,14 +107,15 @@ define( ["qlik", "jquery", "text!./style.css","core.models/engine", "util"], fun
 			canTakeSnapshot: true
 		},
 		paint: function ( $element ) {
-		  	var html = "Select table: <select id='tableSelector'><option value='-'>-</option></select><br><table><thead><tr>", 
-				self = this, 
+		  	var self = this, 
 				lastrow = 0, 
 				morebutton = false, 
+				id = self.options.id,
 				dimcount = this.backendApi.getDimensionInfos().length, 
 				sortorder = this.backendApi.model.layout.qHyperCube.qEffectiveInterColumnSortOrder;
 		
 		  	
+		  	var html = "Select table: <select id='tableSelector_"+id+"'></select><br><table><thead><tr>";
 		  
 		  
 		  	//console.log(this.backendApi.getDimensionInfos());
@@ -178,7 +171,7 @@ define( ["qlik", "jquery", "text!./style.css","core.models/engine", "util"], fun
 		  
 		  	//add 'more...' button
 			if ( this.backendApi.getRowCount() > lastrow + 1 ) {
-				html += "<button id='more'>More...</button>";
+				html += "<button id='more_"+id+"'>More...</button>";
 				morebutton = true;
 			}
 			$element.html( html );
@@ -189,7 +182,7 @@ define( ["qlik", "jquery", "text!./style.css","core.models/engine", "util"], fun
 					qWidth: this.backendApi.getDimensionInfos().length, //should be # of columns
 					qHeight: Math.min( Math.floor(10000/this.backendApi.getDimensionInfos().length), this.backendApi.getRowCount() - lastrow )
 				}];
-				$element.find( "#more" ).on( "qv-activate", function () {
+				$element.find( "#more_"+id ).on( "qv-activate", function () {
 					self.backendApi.getData( requestPage ).then( function ( dataPages ) {
 						self.paint( $element );
 					} );
@@ -201,8 +194,16 @@ define( ["qlik", "jquery", "text!./style.css","core.models/engine", "util"], fun
 		  	app.getTablesAndKeys(qWindowSize, qNullSize, 0, false, false).then(function(tables) {
 				//console.log(data);
 		  		qtr = tables.qtr;
+			  	$('#tableSelector_'+id)
+						.find('option')
+    					.remove()
+    					.end()
+						.append($('<option>', {
+    						value: '-',
+    						text: '-'
+						}));
 				$.each(qtr, function(key, table) {   
-		   			$('#tableSelector')
+		   			$('#tableSelector_'+id)
 			   			.append($("<option></option>")
 			   			.attr("value",table.qName)
 			   			.text(table.qName)); 
