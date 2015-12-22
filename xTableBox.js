@@ -33,7 +33,7 @@ define( ["qlik", "jquery", "text!./style.css","core.models/engine", "util"], fun
 	}
   
   	function reverseOrder ( self, col ) {
-	  	console.log('reverseOrder');
+	  	
 		var hypercube = self.backendApi.model.layout.qHyperCube;
 		var dimcnt = hypercube.qDimensionInfo.length;
 		var reversesort = col < dimcnt ? hypercube.qDimensionInfo[col].qReverseSort :
@@ -48,7 +48,7 @@ define( ["qlik", "jquery", "text!./style.css","core.models/engine", "util"], fun
 	}
 
 	function formatHeader ( col, value, sortorder ) {
-	  	console.log('formatHeader');
+	  	
 		var html =
 			'<th data-col="' + col + '">' + value.qFallbackTitle ;
 		//sort Ascending or Descending ?? add arrow
@@ -88,6 +88,19 @@ define( ["qlik", "jquery", "text!./style.css","core.models/engine", "util"], fun
 				settings: {
 					uses: "settings"
 				},
+			  	table: {
+					component : "items",
+					label : "Table setting",
+					items : {
+					  
+					  btnactive: {
+						ref : "prop.Table",
+						label : "Current selected table:",
+						type : "string",
+						defaultValue: "-"
+					  }
+					}
+			  	},
 			  	about: {
   					type: "items",
   					label: "About",
@@ -106,32 +119,44 @@ define( ["qlik", "jquery", "text!./style.css","core.models/engine", "util"], fun
 		snapshot: {
 			canTakeSnapshot: true
 		},
-		paint: function ( $element ) {
+		paint: function ( $element, layout ) {
 		  	var self = this, 
 				lastrow = 0, 
 				morebutton = false, 
 				id = self.options.id,
 				dimcount = this.backendApi.getDimensionInfos().length, 
+				isMouseDown = false,
+    			isHighlighted,
+				columns = [],
+				dragValues = [],
+				selectedTable,
+				dragColumn,
 				sortorder = this.backendApi.model.layout.qHyperCube.qEffectiveInterColumnSortOrder;
 		
 		  	
-		  	var html = "Select table: <select id='tableSelector_"+id+"'></select><br><table><thead><tr>";
+		  	var html = "Select table: <select id='tableSelector_"+id+"'></select><br><table id='table_"+id+"'><thead><tr>";
 		  
-		  
-		  	//console.log(this.backendApi.getDimensionInfos());
+		  	
+		  	// Fetches the prop: current selected table. This is used so we can make sure the correct select option is selected
+		  	if(layout !== undefined && layout.prop !== undefined) {
+				selectedTable = layout.prop.Table;
+		 	}
+		  	
 		  
 		  	//render titles
 			this.backendApi.getDimensionInfos().forEach( function ( cell, index ) {
 			  	html += formatHeader( index, cell, sortorder );
+			  	columns.push(cell.qFallbackTitle);
 				//html += '<th>' + cell.qFallbackTitle + '</th>';
 			} );
 			this.backendApi.getMeasureInfos().forEach( function ( cell, index ) {
 				html += formatHeader( index + dimcount, cell, sortorder );
 			  	//html += '<th>' + cell.qFallbackTitle + '</th>';
+			  	columns.push(cell.qFallbackTitle);
 			} );
 			html += "</tr></thead><tbody>";
 			
-		  	
+		 
 		  
 		  	//render data
 			this.backendApi.eachDataRow( function ( rownum, row ) {
@@ -161,7 +186,7 @@ define( ["qlik", "jquery", "text!./style.css","core.models/engine", "util"], fun
 						html += "'";
 					}
 				  	
-					html += '>' + cell.qText + '</td>';
+				    html += '>' + (cell.qText === undefined ? ' ' : cell.qText) + '</td>';
 				} );
 				html += '</tr>';
 			} );
@@ -192,7 +217,7 @@ define( ["qlik", "jquery", "text!./style.css","core.models/engine", "util"], fun
 		  
 			// Populate the dropdown.		  
 		  	app.getTablesAndKeys(qWindowSize, qNullSize, 0, false, false).then(function(tables) {
-				//console.log(data);
+				
 		  		qtr = tables.qtr;
 			  	$('#tableSelector_'+id)
 						.find('option')
@@ -202,17 +227,65 @@ define( ["qlik", "jquery", "text!./style.css","core.models/engine", "util"], fun
     						value: '-',
     						text: '-'
 						}));
+			  
 				$.each(qtr, function(key, table) {   
 		   			$('#tableSelector_'+id)
 			   			.append($("<option></option>")
 			   			.attr("value",table.qName)
+						.prop("selected", (selectedTable == table.qName ? true : false))
 			   			.text(table.qName)); 
 	  			});
 	  		});
 		  
+		  
+		  	// Handle drag and select
+		  	$('#table_'+id+' td')
+    			.mousedown(function () {
+				  	isMouseDown = true;
+				  	dragColumn = $(this).context.cellIndex;
+				  	
+				  	// Set the css classes so each line is green. 
+      				$(this).toggleClass("qv-st-data-cell");
+				  	$(this).toggleClass("qv-st-data-cell-selected");
+				  	
+				  	// Remember the value for update when mouseup
+				  	dragValues.push(parseInt( this.getAttribute( "data-value" ), 10 ));
+				  	
+      				
+				  	isHighlighted = $(this).hasClass("qv-st-data-cell-selected");
+      				//return false; // prevent text selection
+    			})
+    			.mouseover(function () {
+      				if (isMouseDown) {
+					  // We want to make sure the user is only selecting values in the column he/she started selecting values in (mousedown)
+					  if(dragColumn == $(this).context.cellIndex) {
+					  	$(this).toggleClass("qv-st-data-cell", isHighlighted);
+        				$(this).toggleClass("qv-st-data-cell-selected", isHighlighted);
+					  
+						// Remember the value for update when mouseup
+					  	dragValues.push(parseInt( this.getAttribute( "data-value" ), 10 ));
+					  }
+      				}
+    			})
+    			.bind("selectstart", function () {
+      				return true;
+    			});
+
+  			$(document).mouseup(function () {
+			  	if(isMouseDown && dragValues.length > 0) {
+				  	
+				  	// Selectes the values the user have highlighted in the table
+					self.backendApi.selectValues(dragColumn,dragValues, true);
+				  	
+				  	dragColumn = null;
+			  	} 
+      			isMouseDown = false;
+    		});
+		  
+		  
 		  	$element.find( '.selectable' ).on( 'qv-activate', function () {
 				if ( this.hasAttribute( "data-value" ) ) {
-					var value = parseInt( this.getAttribute( "data-value" ), 10 ), dim = parseInt( this.getAttribute( "data-dimension" ), 10 );
+				  	var value = parseInt( this.getAttribute( "data-value" ), 10 ), dim = parseInt( this.getAttribute( "data-dimension" ), 10 );
 					self.selectValues( dim, [value], true );
 					$element.find( "[data-dimension='" + dim + "'][data-value='" + value + "']" ).toggleClass( "selected" );
 				}
@@ -237,14 +310,23 @@ define( ["qlik", "jquery", "text!./style.css","core.models/engine", "util"], fun
 		  	$element.find('select, input').on('change', function() {
 				var val = $(this).val() + '';
 			  
+			  	selectedTable = val;
+			  	
+			  	if(selectedTable != '-') {
+				  
+				  	// Update the property so that we remember which table was selected
+				  	self.backendApi.getProperties().then(function(reply){  
+        				reply.prop.Table = selectedTable;
+				  		self.backendApi.setProperties(reply);  
+					}); 
 			  
-				self.backendApi.getProperties().then(function(reply) {
-				  	
-					//var tmpDimension = $.extend(true,{},reply.qHyperCubeDef.qDimensions[0]);
-					var dimensions = [];
-					$.each(qtr, function(key, table) {  
-						if(table.qName == val) {
-							reply.qHyperCubeDef.qInitialDataFetch[0].qWidth = table.qFields.length;
+					self.backendApi.getProperties().then(function(reply) {
+				  		console.log("japp");
+						//var tmpDimension = $.extend(true,{},reply.qHyperCubeDef.qDimensions[0]);
+						var dimensions = [];
+						$.each(qtr, function(key, table) {  
+							if(table.qName == selectedTable) {
+								reply.qHyperCubeDef.qInitialDataFetch[0].qWidth = table.qFields.length;
 					  		
 								$.each(table.qFields, function(key, column) {
 									var tmpDimension = JSON.parse('{"qDef":{"qGrouping":"N","qFieldDefs":"","qFieldLabels":[""],"qSortCriterias":[{"qSortByAscii":1,"qSortByLoadOrder":1,"qExpression":{}}],"qNumberPresentations":[],"qActiveField":0,"autoSort":true,"cId":"","othersLabel":"Övriga"},"qOtherTotalSpec":{"qOtherMode":"OTHER_OFF","qOtherCounted":{"qv":"10"},"qOtherLimit":{"qv":"0"},"qOtherLimitMode":"OTHER_GE_LIMIT","qForceBadValueKeeping":true,"qApplyEvenWhenPossiblyWrongResult":true,"qOtherSortMode":"OTHER_SORT_DESCENDING","qTotalMode":"TOTAL_OFF","qReferencedExpression":{}},"qOtherLabel":{},"qTotalLabel":{},"qCalcCond":{}}');
@@ -255,15 +337,17 @@ define( ["qlik", "jquery", "text!./style.css","core.models/engine", "util"], fun
 								
 								reply.qHyperCubeDef.qDimensions = dimensions;
 								self.backendApi.setProperties(reply);
-								//console.log(reply);
+								
 								self.paint($element);
 							
-				  		}
+				  			}
 				  	
-					});
-					//console.log(dimensions);	
-		  		});
+						});
+					
+		  			});
+				}
 			});
+			
 		}
 	};
 } );
