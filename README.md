@@ -30,4 +30,5 @@ This is much faster than adding a regula table to your sheet and then add all co
 ### Changelog
 
 2015-12-22: Enabled drag select.
+
 2015-12-04: Possible to have multiple instances on the same sheet
