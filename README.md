@@ -25,3 +25,9 @@ This is much faster than adding a regula table to your sheet and then add all co
 
 1. Download the .zip-archive, unpack and rename to xTableBox
 2. Place the directory xTableBox in you Qlik Sense Extensions directory, usually found at "C:\Users\your.username\Documents\Qlik\Sense\Extensions\"
+
+
+### Changelog
+
+2015-12-22: Enabled drag select.
+2015-12-04: Possible to have multiple instances on the same sheet
